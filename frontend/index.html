@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Intelligent Bug Diagnosis Platform</title>
+
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: Arial, sans-serif;
+        }
+
+        body {
+            background: #f4f7fb;
+            min-height: 100vh;
+            padding: 40px 20px;
+        }
+
+        .container {
+            max-width: 850px;
+            margin: auto;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .header h1 {
+            font-size: 32px;
+            color: #1f2937;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            color: #6b7280;
+        }
+
+        .card {
+            background: white;
+            padding: 30px;
+            border-radius: 14px;
+            box-shadow: 0 5px 25px rgba(0, 0, 0, 0.08);
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: #374151;
+        }
+
+        input,
+        textarea,
+        select {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #d1d5db;
+            border-radius: 8px;
+            font-size: 15px;
+            outline: none;
+        }
+
+        textarea {
+            min-height: 120px;
+            resize: vertical;
+        }
+
+        input:focus,
+        textarea:focus,
+        select:focus {
+            border-color: #2563eb;
+        }
+
+        .submit-btn {
+            width: 100%;
+            padding: 14px;
+            border: none;
+            border-radius: 8px;
+            background: #2563eb;
+            color: white;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        .submit-btn:hover {
+            background: #1d4ed8;
+        }
+
+        .result {
+            display: none;
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 8px;
+            white-space: pre-wrap;
+        }
+
+        .success {
+            background: #dcfce7;
+            color: #166534;
+        }
+
+        .error {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+
+        .file-info {
+            margin-top: 8px;
+            font-size: 13px;
+            color: #6b7280;
+        }
+    </style>
+</head>
+
+<body>
+
+<div class="container">
+
+    <div class="header">
+        <h1>Intelligent Bug Diagnosis Platform</h1>
+        <p>Submit your bug report for intelligent diagnosis and fix recommendations.</p>
+    </div>
+
+    <div class="card">
+
+        <form id="bugForm">
+
+            <div class="form-group">
+                <label for="title">Bug Title *</label>
+                <input
+                    type="text"
+                    id="title"
+                    placeholder="Example: Login button causes application crash"
+                    required
+                >
+            </div>
+
+            <div class="form-group">
+                <label for="description">Bug Description *</label>
+                <textarea
+                    id="description"
+                    placeholder="Describe the problem in detail..."
+                    required
+                ></textarea>
+            </div>
+
+            <div class="form-group">
+                <label for="stackTrace">Stack Trace</label>
+                <textarea
+                    id="stackTrace"
+                    placeholder="Paste the stack trace here..."
+                ></textarea>
+            </div>
+
+            <div class="form-group">
+                <label for="errorLog">Error Log</label>
+                <textarea
+                    id="errorLog"
+                    placeholder="Paste error logs here..."
+                ></textarea>
+            </div>
+
+            <div class="form-group">
+                <label for="severity">Severity</label>
+
+                <select id="severity">
+                    <option value="Low">Low</option>
+                    <option value="Medium" selected>Medium</option>
+                    <option value="High">High</option>
+                    <option value="Critical">Critical</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="file">Upload Bug File</label>
+
+                <input
+                    type="file"
+                    id="file"
+                    accept=".txt,.log,.md"
+                >
+
+                <div class="file-info">
+                    Supported formats: TXT, LOG, MD
+                </div>
+            </div>
+
+            <button type="submit" class="submit-btn">
+                Submit Bug
+            </button>
+
+        </form>
+
+        <div id="result" class="result"></div>
+
+    </div>
+
+</div>
+
+<script>
+
+const form = document.getElementById("bugForm");
+const result = document.getElementById("result");
+
+form.addEventListener("submit", async function(event) {
+
+    event.preventDefault();
+
+    const formData = new FormData();
+
+    formData.append(
+        "title",
+        document.getElementById("title").value
+    );
+
+    formData.append(
+        "description",
+        document.getElementById("description").value
+    );
+
+    formData.append(
+        "stack_trace",
+        document.getElementById("stackTrace").value
+    );
+
+    formData.append(
+        "error_log",
+        document.getElementById("errorLog").value
+    );
+
+    formData.append(
+        "severity",
+        document.getElementById("severity").value
+    );
+
+    const fileInput = document.getElementById("file");
+
+    if (fileInput.files.length > 0) {
+        formData.append("file", fileInput.files[0]);
+    }
+
+    result.style.display = "block";
+    result.className = "result";
+    result.textContent = "Submitting bug...";
+
+    try {
+
+        const response = await fetch(
+            "http://127.0.0.1:8000/api/bugs/submit",
+            {
+                method: "POST",
+                body: formData
+            }
+        );
+
+        const data = await response.json();
+
+        if (response.ok) {
+
+            result.className = "result success";
+
+            result.textContent =
+                "Bug submitted successfully!\n\n" +
+                JSON.stringify(data, null, 2);
+
+            form.reset();
+
+        } else {
+
+            result.className = "result error";
+
+            result.textContent =
+                "Submission failed:\n\n" +
+                JSON.stringify(data, null, 2);
+        }
+
+    } catch (error) {
+
+        result.className = "result error";
+
+        result.textContent =
+            "Could not connect to backend.\n\n" +
+            "Make sure FastAPI is running on port 8000.";
+    }
+
+});
+
+</script>
+
+</body>
+</html>
